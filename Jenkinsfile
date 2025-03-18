@@ -1,8 +1,9 @@
 pipeline {
     agent any
     environment {
-        DOCKER_IMAGE = "docker-app:latest"
+        DOCKER_IMAGE = "paddy1123/docker-app:latest"  // Change this to your registry
         CONTAINER_NAME = "docker-running-app"
+        REGISTRY_CREDENTIALS = "docker-hub-credentials"  // Jenkins credentials ID
     }
 
     stages {
@@ -17,6 +18,20 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Login to Docker Registry') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Push to Container Registry') {
+            steps {
+                sh 'docker push $DOCKER_IMAGE'
             }
         }
 
@@ -35,17 +50,17 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                sh 'docker run -d -p 5001:5000 --name $CONTAINER_NAME $DOCKER_IMAGE'
+                sh 'docker run -d -p 5000:5000 --name $CONTAINER_NAME $DOCKER_IMAGE'
             }
         }
     }
 
     post {
         success {
-            echo "Build and container run successful!"
+            echo "Build, push, and container execution successful!"
         }
         failure {
-            echo "Build or container run failed."
+            echo "Build or container execution failed."
         }
     }
 }
