@@ -9,6 +9,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-padma', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                     git url: "https://$GIT_USER:$GIT_TOKEN@github.com/PadmavathyNarayanan/jenkins-docker-demo.git", branch: 'main'
+                }
             }
         }
 
