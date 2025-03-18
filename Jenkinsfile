@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE = "docker-app:latest"
+        CONTAINER_NAME = "docker-running-app"
     }
 
     stages {
@@ -19,9 +20,22 @@ pipeline {
             }
         }
 
+        stage('Stop & Remove Existing Container') {
+            steps {
+                script {
+                    sh '''
+                    if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+                        docker stop $CONTAINER_NAME || true
+                        docker rm $CONTAINER_NAME || true
+                    fi
+                    '''
+                }
+            }
+        }
+
         stage('Run Docker Container') {
             steps {
-                sh 'docker run -d -p 5001:5000 --name my-running-app $DOCKER_IMAGE'
+                sh 'docker run -d -p 5000:5000 --name $CONTAINER_NAME $DOCKER_IMAGE'
             }
         }
     }
